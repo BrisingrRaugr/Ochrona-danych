@@ -1,0 +1,4 @@
+Laboratorium 3: AES-CBC i klucz z hasła.
+Zażółć gęślą jaźń. Plik musi wrócić bez zmiany choćby jednego bajtu.
+Sól i IV zapisujemy razem z kryptogramem. Hasło pozostaje poza plikiem.
+To ćwiczenie nie zapewnia integralności danych.
