@@ -1,0 +1,6 @@
+Regulamin pracowni komputerowej
+1. Konto w pracowni jest osobiste i nie wolno go udostępniać.
+2. Hasło musi mieć co najmniej 12 znaków.
+3. Po zakończeniu pracy należy się wylogować.
+4. Pliki prywatne przechowuj w katalogu domowym, nie na pulpicie.
+5. Awarie zgłaszaj opiekunowi pracowni.

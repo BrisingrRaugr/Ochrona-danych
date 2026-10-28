@@ -1,0 +1,13 @@
+Zamówienie nr 2026/104
+Zamawiający: Pracownia Ochrony Danych
+Dostawca: Hurtownia Sprzętu Biurowego
+Data zamówienia: 28.10.2026
+Przedmiot: klucz sprzętowy USB z obsługą FIDO2
+Liczba sztuk: 10
+Cena jednostkowa netto: 249,00 zł
+Wartość netto: 2490,00 zł
+Termin dostawy: 14 dni od daty zamówienia
+Miejsce dostawy: sekretariat, pokój 510
+Płatność: przelew, 30 dni od dostarczenia faktury
+Osoba kontaktowa: opiekun pracowni
+Zamówienie zatwierdzono w systemie obiegu dokumentów.
