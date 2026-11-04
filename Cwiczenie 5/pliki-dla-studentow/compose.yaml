@@ -1,0 +1,15 @@
+services:
+  web:
+    image: ochrona-danych-lab05:local
+    build: .
+    ports:
+      - "127.0.0.1:${LAB05_PORT:-8080}:8080"
+    volumes:
+      - ./konfiguracja/dostep.conf:/usr/local/apache2/conf/dostep.conf:ro
+      - ./auth:/auth:ro
+  narzedzia:
+    image: ochrona-danych-lab05:local
+    profiles: ["narzedzia"]
+    entrypoint: ["htpasswd"]
+    volumes:
+      - ./auth:/auth
