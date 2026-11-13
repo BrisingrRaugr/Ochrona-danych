@@ -1,0 +1,101 @@
+LABORATORIUM 6 - CROSS-SITE SCRIPTING (XSS)
+
+JAK SIĘ PRZYGOTOWAĆ
+
+Ten materiał zawiera zakres, objaśnienia i ćwiczenia do przygotowania przed zajęciami.
+Pracuj na przykładach podanych poniżej. Odpowiedzi możesz najpierw opracować na kartce;
+uruchomienie przykładów pomaga sprawdzić rozumowanie. Źródła na końcu są uzupełniające.
+Na zajęcia przynieś własne notatki i przygotuj dostęp do swojego repozytorium.
+
+ZAKRES DO NAUCZENIA SIĘ
+
+- Model ataku: źródło danych i miejsce, w którym przeglądarka interpretuje je jako kod.
+- XSS odbity, zapisany i oparty na DOM. Kto wykonuje skrypt i z jakimi uprawnieniami.
+- Same-Origin Policy: schemat, host i port. Ciasteczka nie są izolowane numerem portu.
+- Sesja w ciasteczku jako token okaziciela. Atrybuty HttpOnly, Secure i SameSite.
+- Kodowanie wyjścia: html.escape w Pythonie, automatyczne kodowanie w Jinja2, filtr |safe.
+- Kontekst wstawienia: treść HTML, atrybut, kod JavaScript, adres URL.
+- DOM: innerHTML a textContent. Atrybuty zdarzeń, np. onerror. Dlaczego <script> wstawiony
+  przez innerHTML się nie wykonuje, a obsługa onerror tak.
+- Content-Security-Policy: default-src, script-src, object-src, base-uri, skrypty inline.
+- Flask: trasy, request.args, render_template, session, app.config, @app.after_request.
+- curl: -i, -b, -d. Narzędzia deweloperskie przeglądarki: Elements, Console, Network, Cookies.
+- Kodowanie znaków w adresie URL, np. encodeURIComponent.
+
+PRZED ZAJĘCIAMI
+
+1. Przeczytaj objaśnienia i przeanalizuj oba poniższe przykłady.
+2. Przećwicz otwieranie DevTools w przeglądarce: Elements, Console, Network i Cookies.
+3. Zapisz odpowiedzi do samokontroli i porównaj je z odpowiedziami poniżej.
+
+OBJAŚNIENIA I PRZYKŁAD
+
+XSS pojawia się, gdy niezaufane dane są interpretowane jako aktywna treść strony.
+Źródłem może być parametr URL lub komentarz, a miejscem interpretacji (sink) innerHTML.
+W XSS odbitym dane wracają w odpowiedzi na żądanie; w zapisanym zostają w bazie i trafiają
+do kolejnych odwiedzających. DOM XSS opisuje przetwarzanie w kodzie przeglądarki i może
+współwystępować z tamtymi kategoriami. Skrypt działa w kontekście strony ofiary.
+
+Przykład do przeanalizowania, bez serwera:
+  const dane = '<b>Próba</b>';
+  const pole = document.createElement('div');
+  pole.innerHTML = dane;
+  // porównaj z: pole.textContent = dane;
+innerHTML tworzy element b; textContent zapisuje dosłownie znaki <b>Próba</b>.
+Sam znacznik b nie wykonuje skryptu, lecz pokazuje granicę między tekstem a HTML.
+Skrypt wstawiony przez innerHTML zwykle się nie uruchomi; atrybut zdarzenia, np. onerror,
+może się wykonać. Brak działania jednego ładunku nie dowodzi bezpieczeństwa.
+
+W treści HTML koduj m.in. < jako &lt; i & jako &amp;. W Pythonie służy do tego
+html.escape, a Jinja domyślnie koduje wartości w szablonach HTML. Filtr |safe wyłącza
+tę ochronę. Kodowanie HTML nie wystarcza do wstawiania danych do JavaScript lub URL;
+unikaj takich miejsc, a adresy sprawdzaj również pod kątem dozwolonego schematu.
+We Flask request.args odczytuje parametry, render_template tworzy odpowiedź z szablonu,
+session obsługuje sesję, a after_request pozwala dodać nagłówki do odpowiedzi.
+
+Origin to schemat + host + port: http://localhost:8000 i http://localhost:8001 to różne
+originy. Ciasteczka nie mają izolacji według portu. Token sesji okaziciela daje dostęp
+temu, kto go przedstawi. HttpOnly blokuje odczyt ciasteczka przez JavaScript; Secure
+ogranicza wysyłanie do bezpiecznego transportu, a SameSite ogranicza wysyłanie w kontekście
+cross-site. Żaden z tych atrybutów nie usuwa XSS ani nie blokuje wszystkich działań skryptu.
+
+CSP jest dodatkową warstwą ochrony. Przykład nagłówka:
+  Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'
+script-src określa źródła skryptów, object-src blokuje obiekty, base-uri zmianę bazy URL,
+a default-src jest regułą zastępczą dla wielu dyrektyw. Taka polityka blokuje skrypty
+inline, ale dopuszcza pliki JavaScript tego samego originu. Nie zastępuje kodowania wyjścia.
+curl -i pokazuje nagłówki, -b przekazuje ciasteczka, -d wysyła dane formularza.
+encodeURIComponent koduje wartość parametru URL, ale nie jest ochroną przed XSS.
+
+SAMOKONTROLA
+
+1. Co zobaczysz dla obu sposobów przypisania w przykładzie z napisem <b>Próba</b>?
+2. Kto musi otworzyć stronę w ataku XSS zapisanym? Czy HttpOnly zatrzyma zmianę jej treści?
+3. Czy script-src 'self' blokuje plik JavaScript z tego samego originu?
+
+ODPOWIEDZI DO SAMOKONTROLI
+
+1. innerHTML: pogrubione Próba; textContent: dosłowny napis ze znacznikami.
+2. Osoba oglądająca stronę zawierającą zapisane dane. HttpOnly nie zatrzyma zmiany DOM.
+3. Nie. Ta polityka dopuszcza takie źródło skryptu.
+
+ZASADY
+
+Trzy zadania po 1 pkt. 90 minut (2 x 45), w tym czas na raport i oddanie.
+Ataki wykonujesz wyłącznie w lokalnym środowisku laboratoryjnym. Atak na cudzy serwis bez zgody
+jego właściciela jest przestępstwem.
+Ładunki i poprawki piszesz samodzielnie. Kontener zapewnia środowisko.
+Dozwolone są materiały ISOD, dokumentacja, własne notatki i wcześniej przygotowany własny kod.
+Podczas zajęć wyłącz czaty i podpowiedzi oparte na LLM. Wyjaśniasz swoje ataki i poprawki.
+Oddajesz jeden plik raportu w formacie tekstowym, np. TXT, MD lub PDF z tekstem.
+Nazwa pliku jest dowolna. Raport należy oddać do końca zajęć.
+
+ŹRÓDŁA UZUPEŁNIAJĄCE
+
+- ISOD: Laboratorium 6 (Bezpieczeństwo aplikacji internetowych - XSS).
+- OWASP XSS Prevention: https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+- OWASP DOM XSS Prevention: https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html
+- MDN Content-Security-Policy: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
+- MDN Set-Cookie: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
+- Jinja2, kodowanie HTML: https://jinja.palletsprojects.com/en/stable/templates/#html-escaping
+- Flask: https://flask.palletsprojects.com/en/stable/

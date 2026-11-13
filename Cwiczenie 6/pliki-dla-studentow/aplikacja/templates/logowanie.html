@@ -1,0 +1,11 @@
+{% extends "baza.html" %}
+{% block tytul %}Logowanie{% endblock %}
+{% block tresc %}
+<h1>Logowanie</h1>
+{% if blad %}<p class="blad">{{ blad }}</p>{% endif %}
+<form method="post">
+  <label>Login <input name="login"></label>
+  <label>Hasło <input name="haslo" type="password"></label>
+  <button>Zaloguj</button>
+</form>
+{% endblock %}

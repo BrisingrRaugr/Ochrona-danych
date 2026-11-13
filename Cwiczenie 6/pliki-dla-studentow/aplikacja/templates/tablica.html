@@ -1,0 +1,14 @@
+{% extends "baza.html" %}
+{% block tresc %}
+<h1>Tablica ogłoszeń</h1>
+{% if uzytkownik %}<p>Zalogowano jako: {{ uzytkownik }}</p>
+<form method="post" action="/dodaj">
+  <textarea name="tresc" rows="3" cols="60" placeholder="Treść ogłoszenia"></textarea><br>
+  <button>Dodaj ogłoszenie</button>
+</form>{% else %}<p><a href="/logowanie">Zaloguj się</a>, aby dodać ogłoszenie.</p>{% endif %}
+<ul>
+{% for autor, tresc in wpisy %}
+  <li><b>{{ autor }}</b>: {{ tresc }}</li>
+{% endfor %}
+</ul>
+{% endblock %}

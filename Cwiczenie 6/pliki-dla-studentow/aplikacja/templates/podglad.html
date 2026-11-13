@@ -1,0 +1,8 @@
+{% extends "baza.html" %}
+{% block tytul %}Podgląd ogłoszenia{% endblock %}
+{% block tresc %}
+<h1>Podgląd ogłoszenia</h1>
+<p>Tekst do podglądu przekazujesz po znaku # w adresie, np. /podglad#Dzień dobry</p>
+<div id="podglad"></div>
+<script src="{{ url_for('static', filename='podglad.js') }}"></script>
+{% endblock %}

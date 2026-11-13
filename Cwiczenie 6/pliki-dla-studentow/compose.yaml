@@ -1,0 +1,15 @@
+services:
+  web:
+    image: ochrona-danych-lab06:local
+    build: .
+    ports:
+      - "127.0.0.1:${LAB06_PORT:-8080}:8080"
+    volumes:
+      - ./aplikacja:/app:ro
+  zbieracz:
+    image: ochrona-danych-lab06:local
+    command: ["python", "/zbieracz/zbieracz.py"]
+    ports:
+      - "127.0.0.1:${LAB06_ZBIERACZ_PORT:-8081}:8081"
+    volumes:
+      - ./zbieracz:/zbieracz:ro

@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="pl">
+<head><meta charset="utf-8"><title>{% block tytul %}Tablica ogłoszeń{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styl.css') }}"></head>
+<body>
+<nav><a href="/">Tablica</a> | <a href="/szukaj?q=">Szukaj</a> | <a href="/podglad">Podgląd</a> |
+<a href="/notatka">Moja notatka</a> | <a href="/logowanie">Logowanie</a> | <a href="/wyloguj">Wyloguj</a></nav>
+{% block tresc %}{% endblock %}
+</body>
+</html>
