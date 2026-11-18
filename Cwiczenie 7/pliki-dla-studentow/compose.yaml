@@ -1,0 +1,11 @@
+services:
+  web:
+    image: ochrona-danych-lab07:local
+    build: .
+    read_only: true
+    tmpfs:
+      - /tmp
+    ports:
+      - "127.0.0.1:${LAB07_PORT:-8080}:8080"
+    volumes:
+      - ./aplikacja:/app:ro

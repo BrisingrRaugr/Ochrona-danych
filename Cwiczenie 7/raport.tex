@@ -1,0 +1,94 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage[a4paper,margin=1.4cm]{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{parskip}
+\usepackage[hidelinks]{hyperref}
+\usepackage{textcomp}
+\DeclareUnicodeCharacter{2192}{\textrightarrow} % znak ->
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\renewcommand{\arraystretch}{1.05}
+
+% Kod inline (podkreslenia w argumencie trzeba escapowac: \_)
+\newcommand{\code}[1]{\texttt{\small #1}}
+% Zwarty naglowek sekcji
+\newcommand{\sek}[1]{\smallskip{\bfseries #1}\par\nopagebreak}
+
+\begin{document}
+\shorthandoff{"}
+
+{\large\bfseries Laboratorium 7 - SQL Injection i Code Injection}\hfill\today
+
+\begin{tabular}{@{}llll@{}}
+Imię i nazwisko: & \textbf{Kamil Gomuła} & Numer indeksu: & \textbf{337558} \\
+Repozytorium: & \multicolumn{3}{l}{\url{https://github.com/BrisingrRaugr/Ochrona-danych} \quad Commit: \textbf{(uzupełnić)}} \\
+\end{tabular}
+
+Poprawiona aplikacja: \code{Cwiczenie 7/.../aplikacja/}. Pełne dowody i ładunki: \code{dowody.md}.
+
+\sek{Zadanie 1 — SQL Injection}
+Podatność: w \code{app.py} (\code{sekret()}) klucz sklejany z zapytaniem (\code{"... klucz = '" + klucz + "'"}).
+
+{\footnotesize
+\begin{tabular}{@{}c >{\raggedright\arraybackslash}p{12.5cm} c@{}}
+\toprule
+\# & Wejście (klucz) & Wierszy \\
+\midrule
+1 & \code{1234} & 1 \\
+2 & \code{'} & 0 (błąd) \\
+3 & \code{' OR '1'='1} & 4 \\
+4 & \code{' UNION SELECT type, name FROM sqlite\_master WHERE type='table' --} & 2 \\
+5 & \code{' UNION SELECT login, rola FROM konta --} & 2 \\
+\bottomrule
+\end{tabular}}
+
+Zapytanie po ataku OR: \code{SELECT wlasciciel, sekret FROM sekrety WHERE klucz = '' OR '1'='1'}. Błąd dla \code{'}: \code{OperationalError: unrecognized token}. Tabele: \textbf{sekrety}, \textbf{konta}; kolumny \code{konta}: \textbf{login, rola, email}.
+\textbf{Wniosek:} apostrof zamknął literał, a dopisana składnia (\code{OR}, \code{UNION ... --}) weszła do wykonywanego zapytania — dane stały się kodem.
+
+\sek{Zadanie 2 — Zapytanie z parametrami}
+Poprawka: stały SQL + wartość osobno: \code{db.execute("... WHERE klucz = ?", (klucz,))}; błąd SQLite → ogólny komunikat, szczegóły przez \code{app.logger.exception(...)}.
+
+{\footnotesize
+\begin{tabular}{@{}c >{\raggedright\arraybackslash}p{11.5cm} c c@{}}
+\toprule
+\# & Wejście (klucz) & Przed & Po \\
+\midrule
+1 & \code{1234} & 1 & 1 \\
+2 & \code{'} & 0 (błąd) & 0 \\
+3 & \code{' OR '1'='1} & 4 & 0 \\
+4 & \code{' UNION SELECT type, name FROM sqlite\_master WHERE type='table' --} & 2 & 0 \\
+5 & \code{' UNION SELECT login, rola FROM konta --} & 2 & 0 \\
+6 & \code{d'Artagnan} (legalny klucz z apostrofem) & — & 1 \\
+\bottomrule
+\end{tabular}}
+
+W logu po atakach: wszystkie \code{GET /sekret} → HTTP 200, zero błędów SQLite; żaden atak nie zwrócił cudzych danych.
+\textbf{Wniosek:} SQL jest kompilowany przed podstawieniem \code{?}, więc wartość (z apostrofem) to tylko dane i nie zmienia składni. Parametr \textbf{nie} zastąpi nazwy tabeli — tę wybiera się z listy w kodzie.
+
+\sek{Zadanie 3 — Code Injection w kalkulatorze}
+Podatność: \code{eval(wyrazenie)}. Kroku 2 (wersja podatna): \code{\_\_import\_\_('os').listdir('/etc')} → lista m.in. \code{shadow}, \code{passwd}; \code{open('/etc/os-release').read()} → Alpine Linux v3.24; \code{\_\_import\_\_('os').getuid()} → \textbf{UID 1000} (użytkownik \code{app}, nie root). Poprawka: własny parser \code{liczba operator liczba} (\code{re.fullmatch} + słownik działań), limit 100 znaków, bez \code{eval}/\code{exec}/\code{compile}.
+
+{\footnotesize
+\begin{tabular}{@{}c >{\raggedright\arraybackslash}p{2.4cm} c >{\raggedright\arraybackslash}p{2cm} @{\hspace{1.2em}} c >{\raggedright\arraybackslash}p{6cm} c >{\raggedright\arraybackslash}p{2cm}@{}}
+\toprule
+\# & Wyrażenie & HTTP & Wynik & \# & Wyrażenie & HTTP & Wynik \\
+\midrule
+1 & \code{2+3} & 200 & 5 & 5 & \code{\_\_import\_\_('os').listdir('/etc')} & 400 & złe wejście \\
+2 & \code{7 / 2} & 200 & 3.5 & 6 & \code{open('/etc/os-release').read()} & 400 & złe wejście \\
+3 & \code{-1.5*4} & 200 & -6.0 & 7 & \code{\_\_import\_\_('os').getuid()} & 400 & złe wejście \\
+4 & \code{1/0} & 400 & dziel. 0 & 8 & puste pole & 400 & złe wejście \\
+\bottomrule
+\end{tabular}}
+
+Dodatkowo: \code{2+3abc} → 400; 101 znaków → 400; \code{/kalkulator} bez parametru → 200 (formularz).
+\textbf{Wniosek:} lista dozwolonych operacji jest lepsza od blokowania słów (np. \code{import}), bo blokadę słów zawsze da się obejść, a gramatyka dozwolona odrzuca z góry wszystko poza opisanym formatem.
+
+\end{document}

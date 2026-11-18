@@ -1,0 +1,7 @@
+{% extends "baza.html" %}
+{% block tytul %}Kalkulator{% endblock %}
+{% block tresc %}
+<h1>Kalkulator</h1>
+<form><label>Wyrażenie <input name="wyrazenie" size="50" value="{{ wyrazenie }}"></label> <button>Oblicz</button></form>
+{% if wynik is not none %}<p>Wynik: <output>{{ wynik }}</output></p>{% endif %}
+{% endblock %}

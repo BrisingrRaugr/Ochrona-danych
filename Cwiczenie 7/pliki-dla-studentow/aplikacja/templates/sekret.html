@@ -1,0 +1,13 @@
+{% extends "baza.html" %}
+{% block tytul %}Sejf sekretów{% endblock %}
+{% block tresc %}
+<h1>Sejf sekretów</h1>
+<form><label>Klucz <input name="klucz" size="50" value="{{ klucz }}"></label> <button>Pokaż sekret</button></form>
+{% if klucz %}
+<h2>Tryb diagnostyczny</h2>
+<pre>{{ zapytanie }}</pre>
+{% if blad %}<p class="blad">{{ blad }}</p>{% endif %}
+<p>Liczba wierszy: {{ wiersze|length }}</p>
+<ul>{% for wlasciciel, sekret in wiersze %}<li>{{ wlasciciel }}: {{ sekret }}</li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

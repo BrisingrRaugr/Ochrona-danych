@@ -1,0 +1,97 @@
+LABORATORIUM 7 - SQL INJECTION I CODE INJECTION
+
+JAK SIĘ PRZYGOTOWAĆ
+
+Ten materiał zawiera zakres, objaśnienia i ćwiczenia do przygotowania przed zajęciami.
+Pracuj na przykładach podanych poniżej. Odpowiedzi możesz najpierw opracować na kartce;
+uruchomienie przykładów pomaga sprawdzić rozumowanie. Źródła na końcu są uzupełniające.
+Na zajęcia przynieś własne notatki i przygotuj dostęp do swojego repozytorium.
+
+ZAKRES DO NAUCZENIA SIĘ
+
+- Wstrzyknięcie: dane od użytkownika sklejone z kodem interpretowanym przez SQL, Pythona lub powłokę.
+- SQL: SELECT, WHERE, napisy w apostrofach, komentarz --, operator OR, UNION SELECT
+  i warunek zgodnej liczby kolumn.
+- SQLite: tabela sqlite_master (kolumny type, name, sql), operator || do łączenia napisów.
+- Zapytania z parametrami: znak ? w sqlite3, przekazanie wartości osobno od treści zapytania.
+  Czego parametr nie zastąpi: nazwy tabeli, kolumny i słów kluczowych.
+- Ujawnianie informacji: komunikaty błędów bazy, ślady stosu, tryb diagnostyczny.
+- Python: eval, exec i compile; __import__, os.listdir, open, os.getuid.
+- Walidacja wejścia przez listę dozwolonych wartości i wyrażenia regularne (re.fullmatch).
+- Zasada najmniejszych uprawnień: użytkownik procesu, system plików tylko do odczytu.
+- Flask: request.args, zwracanie kodu HTTP 400, app.logger. sqlite3: connect, execute, fetchall.
+- curl: -G i --data-urlencode do kodowania parametrów.
+
+PRZED ZAJĘCIAMI
+
+1. Przeczytaj objaśnienia i przeanalizuj poniższy kod w Pythonie 3.
+2. Prześledź wynik na kartce lub uruchom kod: sqlite3 i re są w bibliotece standardowej.
+3. Odpowiedz na pytania i porównaj z odpowiedziami.
+
+OBJAŚNIENIA I PRZYKŁAD
+
+Injection oznacza, że dane użytkownika zmieniają strukturę wykonywanego polecenia.
+W SQL SELECT wybiera kolumny, WHERE filtruje wiersze, a napisy otaczamy apostrofami.
+Sklejanie wejścia z zapytaniem pozwala zamknąć napis apostrofem i dopisać składnię.
+OR łączy warunki alternatywą, -- rozpoczyna komentarz do końca wiersza, a UNION łączy
+wyniki zapytań o tej samej liczbie kolumn. W SQLite || łączy napisy; sqlite_master
+opisuje obiekty bazy w kolumnach type, name i sql.
+
+Przykład samodzielny, baza istnieje tylko w pamięci:
+  import sqlite3
+  import re
+  db = sqlite3.connect(':memory:')
+  db.execute('CREATE TABLE osoby (id INTEGER, nazwa TEXT)')
+  db.execute('INSERT INTO osoby VALUES (?, ?)', (1, "O'Neil"))
+  wynik = db.execute('SELECT id, nazwa FROM osoby WHERE nazwa = ?', ("O'Neil",)).fetchall()
+  print(wynik)
+  print(bool(re.fullmatch(r'[0-9]+', '123')))
+  print(bool(re.fullmatch(r'[0-9]+', '12x')))
+Oczekiwane: [(1, "O'Neil")], True, False. Apostrof pozostaje częścią wartości.
+Przecinek w (wartosc,) tworzy krotkę jednoelementową. Parametry przekazują wartości
+osobno od składni SQL; nie zastępują nazw tabel ani kolumn. Te wybieraj z jawnej listy.
+
+eval oblicza wyrażenie Pythona, exec wykonuje instrukcje, a compile tworzy obiekt kodu.
+Wyrażenie też może wywołać funkcję: __import__, open czy os.listdir. Dlatego blokowanie
+jednego słowa nie tworzy bezpiecznego kalkulatora. Zdefiniuj dozwoloną gramatykę wejścia,
+sprawdź cały napis przez fullmatch i wykonuj tylko jawnie wybrane działania arytmetyczne.
+Odrzucaj także puste dane, zbyt duże liczby i dzielenie przez zero.
+
+W aplikacji Flask request.args pobiera parametry żądania. Błędne dane można obsłużyć
+odpowiedzią ('Nieprawidłowe dane', 400), a szczegóły błędu zapisać przez app.logger.
+Użytkownik nie powinien dostawać śladu stosu ani szczegółów bazy. Ograniczone uprawnienia
+procesu i system plików tylko do odczytu zmniejszają skutki błędu, lecz go nie naprawiają.
+curl -G --data-urlencode 'q=tekst ze spacją' koduje wartość parametru żądania GET.
+
+SAMOKONTROLA
+
+1. Dlaczego parametr pozwala wyszukać O'Neil bez zmiany składni zapytania?
+2. Ile kolumn musi mieć druga część UNION dla SELECT id, nazwa FROM osoby?
+3. Czy brak słowa import w wejściu oznacza, że eval jest bezpieczny?
+
+ODPOWIEDZI DO SAMOKONTROLI
+
+1. Wartość jest przekazana osobno i traktowana jako dane, łącznie z apostrofem.
+2. Dwie; wynik każdego SELECT musi mieć tę samą liczbę kolumn.
+3. Nie. Wyrażenie może korzystać z dostępnych funkcji i obiektów, także bez importu.
+
+ZASADY
+
+Trzy zadania po 1 pkt. 90 minut (2 x 45), w tym czas na raport i oddanie.
+Ataki wykonujesz wyłącznie w lokalnym środowisku laboratoryjnym. Atak na cudzy serwis bez zgody
+jego właściciela jest przestępstwem.
+Wejścia atakujące i poprawki piszesz samodzielnie. Kontener zapewnia środowisko.
+Dozwolone są materiały ISOD, dokumentacja, własne notatki i wcześniej przygotowany własny kod.
+Podczas zajęć wyłącz czaty i podpowiedzi oparte na LLM. Wyjaśniasz swoje ataki i poprawki.
+Oddajesz jeden plik raportu w formacie tekstowym, np. TXT, MD lub PDF z tekstem.
+Nazwa pliku jest dowolna. Raport należy oddać do końca zajęć.
+
+ŹRÓDŁA UZUPEŁNIAJĄCE
+
+- ISOD: Laboratorium 7 (Bezpieczeństwo aplikacji internetowych - Injection).
+- OWASP SQL Injection Prevention: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+- OWASP Query Parameterization: https://cheatsheetseries.owasp.org/cheatsheets/Query_Parameterization_Cheat_Sheet.html
+- OWASP Injection Prevention: https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+- Python sqlite3, parametry: https://docs.python.org/3/library/sqlite3.html#sqlite3-placeholders
+- Python eval: https://docs.python.org/3/library/functions.html#eval
+- SQLite, tabela schematu: https://www.sqlite.org/schematab.html
